@@ -14,24 +14,16 @@ from scrape.progress import Progress, EXCEPTION_HANDLERS
 
 from utils.browsers import BrowserTypes
 from utils.time import DATE_FORMAT
+from widgets.tool_frame import ToolFrame
 
 
-class InsightsScraper(tk.Frame):
+class InsightsScraper(ToolFrame):
     def __init__(self, master):
+        super().__init__(master=master)
         print('Insights scraper')
         self.save_directory: Path = Path(os.getcwd()).joinpath('CSVs')
         self.progress_bars: Dict[int, ] = dict()
-        self.scrape_thread = None
-        self.stop_event = threading.Event()
-        self.buttons: Dict[str, tk.Button] = dict()
         self.loading_frame = None
-
-        master.minsize(800, 300)
-        master.maxsize(1200, 450)
-        tk.Frame.__init__(self, master=master, width=800, height=300)
-        self.columnconfigure(0, weight=1, minsize=800)
-        self.rowconfigure(0, weight=1, minsize=70)
-        self.rowconfigure(1, weight=1, minsize=230)
 
         top_frame = tk.Frame(master=self, relief=tk.RAISED)
         top_frame.grid(row=0, column=0, sticky='news')
@@ -63,6 +55,7 @@ class InsightsScraper(tk.Frame):
 
         self.save_location = tk.Entry(master=options_frame)
         self.save_location.grid(row=0, column=0, padx=2, pady=2, sticky='news')
+        self.save_location.delete(0, tk.END)
         self.save_location.insert(0, str(self.save_directory))
 
         self.buttons['open'] = tk.Button(master=options_frame, text='Open', command=lambda: self._set_save_directory())
@@ -97,14 +90,8 @@ class InsightsScraper(tk.Frame):
 
     def _set_save_directory(self):
         self.save_directory = Path(filedialog.askdirectory(initialdir=str(self.save_directory)))
-
-    def _set_buttons_state(self, state):
-        for button in self.buttons:
-            self.buttons[button]['state'] = state
-
-    def _cleanup(self):
-        self.stop_event.set()
-        self._set_buttons_state(tk.DISABLED)
+        self.save_location.delete(0, tk.END)
+        self.save_location.insert(0, str(self.save_directory))
 
     def _destroy_progress(self):
         for appid in self.progress_bars:

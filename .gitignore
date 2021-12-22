@@ -135,3 +135,7 @@ CSVs/
 .DS_Store
 .idea/
 
+
+
+# Smommit ignore
+.smommit/

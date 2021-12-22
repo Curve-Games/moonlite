@@ -1,4 +1,6 @@
+from os import system
 import tkinter as tk
+from platform import platform
 
 from grant_package import GrantPackage
 from insights_scraper import InsightsScraper

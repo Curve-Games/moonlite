@@ -1,3 +1,6 @@
+import concurrent.futures
+import threading
+import time
 from typing import Any, Dict, List
 import browser_cookie3
 import json
@@ -41,7 +44,7 @@ def get_cookies(browser_type: BrowserTypes) -> dict:
 def get_apps(cookies: dict, store_pages_only: bool = True) -> List[Dict[str, Any]]:
     """Gets all apps from the partner.steamgames.com dashboard.
 
-    Params:
+    Args:
         cookies: a dictionary of cookies so that partner.steamgames.com can be accessed. See get_cookies.
         store_pages_only: whether or not to get apps with store pages available or to get all apps (default: True).
 
@@ -77,6 +80,56 @@ def get_apps(cookies: dict, store_pages_only: bool = True) -> List[Dict[str, Any
         apps.append(app)
     return apps
 
+def get_packages(cookies: dict, store_pages_only: bool = True, get_app_results: List[Dict[str, Any]] = None) -> Dict[int, int]:
+    """Will first retrieve all the apps from the partner.steamgames.com dashboard (using get_apps), and will then use
+    the Steam store API to retrieve all the packages that ARE BEING SOLD for that app.
+
+    Args:
+        cookies: a dictionary of cookies so that partner.steamgames.com can be accessed. See get_cookies.
+        store_pages_only: whether or not to get apps with store pages available or to get all apps (default: True).
+        get_app_results: pass in results from previous get_app call to remove the need for calling it again.
+
+    Returns:
+        A dictionary containing a mapping of packageids to appids.
+    """
+    apps = get_app_results
+    if apps is None:
+        apps = get_apps(cookies, store_pages_only)
+    app_ids = [app['appid'] for app in apps]
+
+    packages = dict()
+    package_lock = threading.Lock()
+
+    def app_thread(appid: int):
+        soup = BeautifulSoup(requests.get(f'https://partner.steamgames.com/apps/associated/{appid}', cookies=cookies).content, 'html.parser')
+        packageids = [
+            [int(part) for part in PurePosixPath(
+                unquote(urlparse(row.find('a', attrs={'href': True})['href']).path)
+            ).parts if part.isnumeric()][-1] for row in soup.find(
+                'div',
+                text='Store packages'
+            ).parent.find_all(
+                'div',
+                attrs={'class': 'tr released'}
+            )
+        ]
+
+        with package_lock:
+            for packageid in packageids:
+                packages[packageid] = appid
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=20) as pool:
+        pool.map(app_thread, app_ids)
+    return packages
+
 if __name__ == '__main__':
+    start = time.time()
     cookies = get_cookies(ask_browser())
-    get_apps(cookies)
+    apps = get_apps(cookies)
+    print('apps:')
+    print(json.dumps(apps, sort_keys=True, indent=4))
+
+    packages = get_packages(cookies, get_app_results=apps)
+    print('packages:')
+    print(json.dumps(packages, sort_keys=True, indent=4))
+    print('Fetching took:', time.time() - start)

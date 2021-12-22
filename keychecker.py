@@ -4,7 +4,6 @@ import tkinter as tk
 from tkinter import TclError, ttk, messagebox
 from pathlib import Path
 import threading
-from typing import Dict
 
 from tkinter import filedialog
 from scrape.progress import Progress, EXCEPTION_HANDLERS
@@ -12,24 +11,16 @@ from scrape.keychecker import keychecker
 
 from utils.browsers import BrowserTypes
 from widgets.text_placeholder import TextPlaceholder
+from widgets.tool_frame import ToolFrame
 
 
-class Keychecker(tk.Frame):
+class Keychecker(ToolFrame):
     def __init__(self, master):
+        super().__init__(master=master)
         print('Keychecker page')
         self.save_filename: Path = Path(os.getcwd()).joinpath(f'keys.csv')
         self.progress_bar = None
-        self.scrape_thread = None
-        self.stop_event = threading.Event()
-        self.buttons: Dict[str, tk.Button] = dict()
         self.loading_progress = None
-
-        master.minsize(800, 300)
-        master.maxsize(1200, 450)
-        tk.Frame.__init__(self, master=master, width=800, height=300)
-        self.columnconfigure(0, weight=1, minsize=800)
-        self.rowconfigure(0, weight=1, minsize=70)
-        self.rowconfigure(1, weight=1, minsize=230)
 
         top_frame = tk.Frame(master=self, relief=tk.RAISED)
         top_frame.grid(row=0, column=0, sticky='news')
@@ -52,7 +43,6 @@ class Keychecker(tk.Frame):
         self.save_location = tk.Entry(master=options_frame)
         self.save_location.grid(row=0, column=1, padx=2, pady=2, sticky='news')
         self.save_location.delete(0, tk.END)
-        self.save_location.insert(0, '')
         self.save_location.insert(0, str(self.save_filename))
 
         # Save and Load buttons
@@ -69,7 +59,7 @@ class Keychecker(tk.Frame):
         self.buttons['start'] = tk.Button(master=options_frame, text='Start', command=lambda: self._toggle_scrape())
         self.buttons['start'].grid(row=0, column=5, padx=2, pady=2, sticky='news')
 
-        # Create a scrollable frame for our progress bars
+        # Create a scrollable Text box so that the user can enter keys
         self.bottom_frame = ttk.Frame(self, relief=tk.SUNKEN)
         self.bottom_frame.grid(row=1, column=0, padx=2, pady=2, sticky='news')
         self.bottom_frame.rowconfigure(0, weight=1, minsize=260)
@@ -89,6 +79,8 @@ class Keychecker(tk.Frame):
 
     def _set_save_file(self):
         self.save_filename = Path(filedialog.asksaveasfilename(initialdir=str(self.save_filename)))
+        self.save_location.delete(0, tk.END)
+        self.save_location.insert(0, str(self.save_filename))
 
     def _load_file(self):
         filepath = filedialog.askopenfilename(
@@ -106,19 +98,11 @@ class Keychecker(tk.Frame):
             with open(filepath, 'r') as f:
                 self.entry.insert(1.0, f.read())
 
-    def _set_buttons_state(self, state):
-        for button in self.buttons:
-            self.buttons[button]['state'] = state
-
     def _destroy_progress(self):
         for child in self.progress_bar_frame.winfo_children():
             print('destroying', child)
             child.destroy()
         self.progress_bar = None
-
-    def _cleanup(self):
-        self.stop_event.set()
-        self._set_buttons_state(tk.DISABLED)
 
     def _toggle_scrape(self):
         keys = [key.replace('\n', '') for key in self.entry.get("1.0", tk.END).split('\n') if key]
