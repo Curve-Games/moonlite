@@ -18,7 +18,7 @@ class Keychecker(ToolFrame):
     def __init__(self, master):
         super().__init__(master=master)
         print('Keychecker page')
-        self.save_filename: Path = Path(os.getcwd()).joinpath(f'keys.csv')
+        self.save_filename: Path = Path(os.getcwd()).joinpath('CSVs').joinpath('keys.csv')
         self.progress_bar = None
         self.loading_progress = None
 

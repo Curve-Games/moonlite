@@ -1,8 +1,14 @@
+import io
 import os
+import threading
 import tkinter as tk
+import traceback
 from tkinter import filedialog, ttk
 
-from widgets.highlight import Highlight
+import requests
+from PIL import Image, ImageTk
+
+from widgets.highlight_popup import HighlightPopup
 from widgets.text_placeholder import TextPlaceholder
 from widgets.tool_frame import ToolFrame
 
@@ -51,7 +57,7 @@ class GrantPackage(ToolFrame):
         self.bottom_frame.rowconfigure(0, weight=1, minsize=230)
         self.bottom_frame.columnconfigure(0, weight=1, minsize=800)
 
-        self.entry = Highlight(self.bottom_frame, lambda event: self._popup_package_details(event))
+        self.entry = HighlightPopup(self.bottom_frame, lambda event: self._popup_package_details(event))
         self.entry.grid(row=0, column=0, padx=2, pady=2, sticky='news')
         scrollbar = tk.Scrollbar(self.entry)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
@@ -59,14 +65,66 @@ class GrantPackage(ToolFrame):
         self.entry.config(yscrollcommand=scrollbar.set)
 
     def _popup_package_details(self, event):
-        info_window = tk.Toplevel(self)
-        info_window.wm_overrideredirect(True)
-        info_window.wm_geometry("200x50+{0}+{1}".format(event.x_root - 100, event.y_root - 25))
+        # Create a top level widget at the event x_root, y_root
+        self.entry.tw = tk.Toplevel(self.entry)
+        self.entry.tw.columnconfigure(0, weight=1, minsize=200)
+        self.entry.tw.rowconfigure(0, weight=1, minsize=100)
+        self.entry.tw.wm_overrideredirect(True)
+        self.entry.tw.wm_geometry("200x100+{0}+{1}".format(event.x_root - 100, event.y_root - 100))
 
-        label = tk.Label(info_window, text="Word definition goes here.")
-        label.pack(fill=tk.BOTH)
+        print('highlighted is:', self.entry.get_highlighted())
+        self.entry.frame = tk.Frame(self.entry.tw)
+        self.entry.frame.grid(row=0, column=0, padx=2, pady=2, sticky='news')
+        highlighted = self.entry.get_highlighted()
 
-        info_window.bind_all("<Leave>", lambda e: info_window.destroy())  # Remove popup when pointer leaves the window
+        def fetch_profile(entry):
+            def create_frame():
+                entry.frame.destroy()
+                entry.frame = tk.Frame(entry.tw)
+                entry.frame.grid(row=0, column=0, padx=2, pady=2, sticky='news')
+
+            def single_grid():
+                entry.frame.columnconfigure(0, weight=1, minsize=200)
+                entry.frame.rowconfigure(0, weight=1, minsize=100)
+
+            try:
+                if highlighted and highlighted.isnumeric() and 17 <= len(highlighted) <= 20:
+                    print(f'\"{highlighted}\" is formatted as a STEAMID64')
+                    profile_summary = requests.get(
+                        f'https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/'
+                        f'?key=0C17FA31D5AA91340F1BC3D991F3E382&steamids={highlighted}'
+                    ).json().get('response', {}).get('players', [{}])[0]
+                    personaname = profile_summary['personaname']
+                    avatar = profile_summary['avatarmedium']
+                    print('avatar url', avatar)
+                    response = requests.get(avatar, stream=True)
+                    image = ImageTk.PhotoImage(Image.open(io.BytesIO(response.raw.read())))
+                    create_frame()
+                    entry.frame.columnconfigure(0, weight=1, minsize=200)
+                    entry.frame.rowconfigure(0, weight=1, minsize=75)
+                    entry.frame.rowconfigure(1, weight=1, minsize=25)
+
+                    entry.photo = tk.Label(entry.frame, image=image)
+                    entry.photo.grid(row=0, column=0, padx=2, pady=2, sticky='news')
+                    entry.name = tk.Label(entry.frame, text=personaname)
+                    entry.name.grid(row=1, column=0, padx=2, pady=2, sticky='news')
+                else:
+                    error = f'{highlighted.encode("unicode_escape")} is not formatted as a STEAMID64'
+                    print(error)
+                    create_frame()
+                    single_grid()
+                    tk.Label(entry.frame, text=error, wraplength=180).grid(row=0, column=0, padx=2, pady=2, sticky='news')
+            except Exception as e:
+                print(e)
+                traceback.print_tb(e.__traceback__)
+                create_frame()
+                single_grid()
+                tk.Label(entry.frame, text=f'\"{e}\" occurred whilst fetching profile', wraplength=180).grid(row=0, column=0, padx=2, pady=2, sticky='news')
+
+        profile_fetch = threading.Thread(name=f'Profile fetch for {highlighted}', target=lambda: fetch_profile(self.entry))
+        profile_fetch.start()
+        # progress_frame.columnconfigure()
+        # progress_frame.rowconfigure()
 
     def _load_file(self):
         filepath = filedialog.askopenfilename(

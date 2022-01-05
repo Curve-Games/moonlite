@@ -5,13 +5,13 @@ from typing import Dict
 
 
 class ToolFrame(tk.Frame):
-    def __init__(self, master):
+    def __init__(self, master, minsize_x: int = 800, minsize_y: int = 300, maxsize_x: int = 1200, maxsize_y: int = 450):
         self.scrape_thread = None
         self.stop_event = threading.Event()
         self.buttons: Dict[str, tk.Button] = dict()
 
-        master.minsize(800, 300)
-        master.maxsize(1200, 450)
+        master.minsize(minsize_x, minsize_y)
+        master.maxsize(maxsize_x, maxsize_y)
         tk.Frame.__init__(self, master=master, width=800, height=300)
         self.columnconfigure(0, weight=1, minsize=800)
         self.rowconfigure(0, weight=1, minsize=70)
