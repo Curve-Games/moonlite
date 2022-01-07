@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from typing import Union
-from utils.browsers import BrowserTypes
-from utils.time import DATE_FORMAT
+from moonlite.utils.browsers import BrowserTypes
+from moonlite.utils.time import DATE_FORMAT
 
 def ask_for(question: str, answers: list):
     answer = str(input(question + " " + str(answers) + ": ")).lower()

@@ -9,7 +9,7 @@ from typing import List, Type
 import requests
 from tqdm import tqdm
 
-from scrape.progress import Progress, get_exec_results, StopException
+from moonlite.scrape.progress import Progress, get_exec_results, StopException
 
 
 def grant_package(

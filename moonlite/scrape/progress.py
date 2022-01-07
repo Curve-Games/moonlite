@@ -6,7 +6,7 @@ from inspect import signature
 from tkinter import messagebox
 from typing import Union, Type
 
-from utils.dashboard import CookiesNotFound
+from moonlite.utils.dashboard import CookiesNotFound
 
 
 class Progress(ABC):

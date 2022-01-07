@@ -12,10 +12,10 @@ import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 
-from scrape.progress import Progress, get_exec_results, StopException
-from utils.browsers import BrowserTypes
-from utils.dashboard import get_cookies, get_packages
-from utils.text import ask_browser
+from moonlite.scrape.progress import Progress, get_exec_results, StopException
+from moonlite.utils.browsers import BrowserTypes
+from moonlite.utils.dashboard import get_cookies, get_packages
+from moonlite.utils.text import ask_browser
 
 CSV_HEADER = [
     'package',

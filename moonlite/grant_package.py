@@ -8,9 +8,9 @@ from tkinter import filedialog, ttk
 import requests
 from PIL import Image, ImageTk
 
-from widgets.highlight_popup import HighlightPopup
-from widgets.text_placeholder import TextPlaceholder
-from widgets.tool_frame import ToolFrame
+from moonlite.widgets.highlight_popup import HighlightPopup
+from moonlite.widgets.text_placeholder import TextPlaceholder
+from moonlite.widgets.tool_frame import ToolFrame
 
 
 class GrantPackage(ToolFrame):

@@ -8,11 +8,11 @@ from tkinter import filedialog, ttk, messagebox
 import tkinter as tk
 from typing import List, Dict, Any
 
-from scrape.discounts import CSV_HEADER, discounts
-from scrape.progress import Progress, EXCEPTION_HANDLERS
-from utils.browsers import BrowserTypes
-from utils.threading import ThreadWithReturn
-from widgets.tool_frame import ToolFrame
+from moonlite.scrape.discounts import CSV_HEADER, discounts
+from moonlite.scrape.progress import Progress, EXCEPTION_HANDLERS
+from moonlite.utils.browsers import BrowserTypes
+from moonlite.utils.threading import ThreadWithReturn
+from moonlite.widgets.tool_frame import ToolFrame
 
 HEADER_WIDTHS = {
     'package': 70,

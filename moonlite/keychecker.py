@@ -6,12 +6,12 @@ from pathlib import Path
 import threading
 
 from tkinter import filedialog
-from scrape.progress import Progress, EXCEPTION_HANDLERS
-from scrape.keychecker import keychecker
+from moonlite.scrape.progress import Progress, EXCEPTION_HANDLERS
+from moonlite.scrape.keychecker import keychecker
 
-from utils.browsers import BrowserTypes
-from widgets.text_placeholder import TextPlaceholder
-from widgets.tool_frame import ToolFrame
+from moonlite.utils.browsers import BrowserTypes
+from moonlite.widgets.text_placeholder import TextPlaceholder
+from moonlite.widgets.tool_frame import ToolFrame
 
 
 class Keychecker(ToolFrame):

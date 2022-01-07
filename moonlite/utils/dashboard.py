@@ -9,8 +9,8 @@ import requests
 from urllib.parse import unquote, urlparse
 from pathlib import PurePosixPath
 
-from utils.text import ask_browser
-from utils.browsers import BrowserTypes
+from moonlite.utils.text import ask_browser
+from moonlite.utils.browsers import BrowserTypes
 
 COOKIES_REQUIRED_PREFIXES = {"sessionid", "steamLoginSecure", "steamMachineAuth"}
 STEAM_DASHBOARDS = {

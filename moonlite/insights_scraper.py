@@ -9,12 +9,12 @@ from typing import Dict
 
 from tkcalendar import DateEntry
 from tkinter import filedialog, messagebox
-from scrape.insights import insights_scrape
-from scrape.progress import Progress, EXCEPTION_HANDLERS
+from moonlite.scrape.insights import insights_scrape
+from moonlite.scrape.progress import Progress, EXCEPTION_HANDLERS
 
-from utils.browsers import BrowserTypes
-from utils.time import DATE_FORMAT
-from widgets.tool_frame import ToolFrame
+from moonlite.utils.browsers import BrowserTypes
+from moonlite.utils.time import DATE_FORMAT
+from moonlite.widgets.tool_frame import ToolFrame
 
 
 class InsightsScraper(ToolFrame):

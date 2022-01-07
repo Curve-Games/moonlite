@@ -11,10 +11,10 @@ from slugify import slugify
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 
-from scrape.progress import Progress, get_exec_results, StopException
-from utils.browsers import BrowserTypes
-from utils.text import ask_browser
-from utils.dashboard import get_cookies
+from moonlite.scrape.progress import Progress, get_exec_results, StopException
+from moonlite.utils.browsers import BrowserTypes
+from moonlite.utils.text import ask_browser
+from moonlite.utils.dashboard import get_cookies
 
 BROWSER_TYPES = [
     'Chrome',
