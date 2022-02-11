@@ -12,6 +12,7 @@ from pathlib import PurePosixPath
 from moonlite.utils.text import ask_browser
 from moonlite.utils.browsers import BrowserTypes
 
+# The required prefixes for cookies that are necessary to authenticate a user on the Steamworks dashboard.
 COOKIES_REQUIRED_PREFIXES = {"sessionid", "steamLoginSecure", "steamMachineAuth"}
 STEAM_DASHBOARDS = {
     ''
@@ -21,14 +22,30 @@ class CookiesNotFound(Exception):
     pass
 
 def get_cookies(browser_type: BrowserTypes) -> dict:
+    """GetCookies will use the browser_cookie3 package to extract the necessary cookies that Steam uses to authenticate
+    a browser when on the Steamworks portal. For this to work effectively it is better that the user has a browser open
+    (of the given type) that is logged into Steamworks. This is so that cookies are as fresh as they can be/they exist
+    in the cookie jar.
+
+    Args:
+        browser_type: a value of the BrowserTypes enumeration denoting the browser that
+
+    Returns:
+        A dictionary of all the cookies necessary to authenticate a user on the Steamworks portal.
+    """
     tries = 3
     while tries:
         cj = getattr(browser_cookie3, browser_type.name.lower())()
         cookies = {}
+        # We iterate over the cookies fetched from the browser; applying a filter to them in order to find the necessary
+        # cookies.
         for cookie in cj:
-            if cookie.domain == 'partner.steamgames.com' and (cookie.name.startswith('steam') or cookie.name == 'sessionid') and cookie not in cookies:
+            if cookie.domain == 'partner.steamgames.com' and \
+                    (cookie.name.startswith('steam') or cookie.name == 'sessionid') and \
+                    cookie not in cookies:
                 cookies[cookie.name] = cookie.value
 
+        # We then check if we have all the required cookies. This is done by checking the prefixes of each cookie's name
         if all(any(cookie.startswith(check) for cookie in cookies) for check in COOKIES_REQUIRED_PREFIXES):
             break
         else:
