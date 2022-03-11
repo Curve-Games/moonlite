@@ -14,7 +14,7 @@ from tqdm import tqdm
 
 from moonlite.scrape.progress import Progress, get_exec_results, StopException
 from moonlite.utils.browsers import BrowserTypes
-from moonlite.utils.dashboard import get_cookies, get_packages
+from moonlite.utils.dashboard import get_cookies, get_packages, Dashboards
 from moonlite.utils.text import ask_browser
 
 CSV_HEADER = [
@@ -41,7 +41,7 @@ def discounts(
 
     # Then we get the cookies from the browser
     try:
-        cookies = get_cookies(browser_type)
+        cookies = Dashboards.STEAMGAMES.cookies(browser_type)
         packages = get_packages(cookies)
         print(f'Found {len(set(packages.values()))} Curve apps and {len(packages)} packages')
     except Exception as e:

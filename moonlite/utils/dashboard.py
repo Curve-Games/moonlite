@@ -1,7 +1,8 @@
 import concurrent.futures
 import threading
 import time
-from typing import Any, Dict, List
+from enum import Enum
+from typing import Any, Dict, List, Set
 import browser_cookie3
 import json
 from bs4 import BeautifulSoup
@@ -12,26 +13,52 @@ from pathlib import PurePosixPath
 from moonlite.utils.text import ask_browser
 from moonlite.utils.browsers import BrowserTypes
 
-# The required prefixes for cookies that are necessary to authenticate a user on the Steamworks dashboard.
-COOKIES_REQUIRED_PREFIXES = {"sessionid", "steamLoginSecure", "steamMachineAuth"}
-STEAM_DASHBOARDS = {
-    ''
-}
+class Dashboards(Enum):
+    def __new__(cls, *args, **kwds):
+        value = len(cls.__members__) + 1
+        obj = object.__new__(cls)
+        obj._value_ = value
+        return obj
+
+    def __init__(self, portal_url: str, cookies_required_prefixes: Set[str]):
+        # The URL to access when logging in. Usually this redirects you to a landing page of some sort.
+        self.portal_url = portal_url
+        # The domain of the portal. Used for fetching cookies
+        self.portal_domain = urlparse(self.portal_url).netloc
+        # The required prefixes for cookies that are necessary to authenticate a user on the Steamworks dashboard.
+        self.cookies_required_prefixes = cookies_required_prefixes
+
+    STEAMGAMES = 'https://partner.steamgames.com/dashboard', {"sessionid", "steamLoginSecure", "steamMachineAuth"}
+    STEAMPOWERED = 'https://partner.steampowered.com/nav_games.php', {"steamLoginSecure", "steamMachineAuth"}
+
+    def cookies(self, browser_type: BrowserTypes) -> dict:
+        """Wrapper for get_cookies for the related dashboard instance.
+
+        Args:
+            browser_type: a value of the BrowserTypes enumeration denoting the browser that is being used to fetch
+                          cookies from
+
+        Returns:
+
+        """
+        return get_cookies(browser_type, self)
 
 class CookiesNotFound(Exception):
     pass
 
-def get_cookies(browser_type: BrowserTypes) -> dict:
+def get_cookies(browser_type: BrowserTypes, dashboard: Dashboards) -> dict:
     """GetCookies will use the browser_cookie3 package to extract the necessary cookies that Steam uses to authenticate
     a browser when on the Steamworks portal. For this to work effectively it is better that the user has a browser open
     (of the given type) that is logged into Steamworks. This is so that cookies are as fresh as they can be/they exist
     in the cookie jar.
 
     Args:
-        browser_type: a value of the BrowserTypes enumeration denoting the browser that
+        dashboard: the dashboard to fetch cookies for
+        browser_type: a value of the BrowserTypes enumeration denoting the browser that is being used to fetch cookies
+                      from
 
     Returns:
-        A dictionary of all the cookies necessary to authenticate a user on the Steamworks portal.
+        A dictionary of all the cookies necessary to authenticate a user on the given dashboard.
     """
     tries = 3
     while tries:
@@ -40,13 +67,13 @@ def get_cookies(browser_type: BrowserTypes) -> dict:
         # We iterate over the cookies fetched from the browser; applying a filter to them in order to find the necessary
         # cookies.
         for cookie in cj:
-            if cookie.domain == 'partner.steamgames.com' and \
+            if cookie.domain == dashboard.portal_domain and \
                     (cookie.name.startswith('steam') or cookie.name == 'sessionid') and \
                     cookie not in cookies:
                 cookies[cookie.name] = cookie.value
 
         # We then check if we have all the required cookies. This is done by checking the prefixes of each cookie's name
-        if all(any(cookie.startswith(check) for cookie in cookies) for check in COOKIES_REQUIRED_PREFIXES):
+        if all(any(cookie.startswith(check) for cookie in cookies) for check in dashboard.cookies_required_prefixes):
             break
         else:
             print('ERROR: Could not find all cookies required. Try refreshing partner.steamgames.com. Trying again...')
@@ -141,7 +168,7 @@ def get_packages(cookies: dict, store_pages_only: bool = True, get_app_results: 
 
 if __name__ == '__main__':
     start = time.time()
-    cookies = get_cookies(ask_browser())
+    cookies = Dashboards.STEAMGAMES.cookies(ask_browser())
     apps = get_apps(cookies)
     print('apps:')
     print(json.dumps(apps, sort_keys=True, indent=4))

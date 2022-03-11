@@ -12,7 +12,7 @@ from tqdm import tqdm
 from moonlite.scrape.progress import Progress, StopException, get_exec_results
 from moonlite.utils.time import DATE_FORMAT, DATE_FORMAT_FILE
 from moonlite.utils.text import ask_browser, ask_date
-from moonlite.utils.dashboard import get_apps, get_cookies
+from moonlite.utils.dashboard import get_apps, get_cookies, Dashboards
 from moonlite.utils.browsers import BrowserTypes
 
 BROWSER_TYPES = [
@@ -51,7 +51,7 @@ def insights_scrape(
 
     # Then we get the cookies from the browser
     try:
-        cookies = get_cookies(browser_type)
+        cookies = Dashboards.STEAMGAMES.cookies(browser_type)
         apps = get_apps(cookies)
         app_lookup = {app['appid']: app['name'] for app in apps}
         print(f'Found {len(app_lookup)} Curve apps')

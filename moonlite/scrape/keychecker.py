@@ -15,7 +15,7 @@ from tqdm import tqdm
 from moonlite.scrape.progress import Progress, get_exec_results, StopException
 from moonlite.utils.browsers import BrowserTypes
 from moonlite.utils.text import ask_browser
-from moonlite.utils.dashboard import get_cookies
+from moonlite.utils.dashboard import get_cookies, Dashboards
 
 BROWSER_TYPES = [
     'Chrome',
@@ -44,7 +44,7 @@ def keychecker(output: Path, browser_type: BrowserTypes, keys: List[str], progre
     # Then we get the cookies from the browser.
     try:
         keys = [key.replace('\n', '') for key in keys if key]
-        cookies = get_cookies(browser_type)
+        cookies = Dashboards.STEAMGAMES.cookies(browser_type)
     except Exception as e:
         progress(0, e)
         return

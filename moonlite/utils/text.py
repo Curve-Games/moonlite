@@ -1,5 +1,6 @@
+import os
 from datetime import date, datetime
-from typing import Union
+from typing import Union, List
 from moonlite.utils.browsers import BrowserTypes
 from moonlite.utils.time import DATE_FORMAT
 
@@ -43,3 +44,16 @@ def ask_browser():
         except ValueError:
             print('Choice is not a integer. Try again.')
     return list(BrowserTypes)[line_no - 1]
+
+def ask_list(things: str) -> List[str]:
+    path_or_list = input(f'Enter a comma seperated list of {things} to check or '
+                         f'the filepath to a text file with the {things}: ')
+    l = []
+    if os.path.isfile(path_or_list):
+        print('Given input was interpreted as a filepath')
+        with open(path_or_list, 'r') as key_file:
+            l = [line.replace('\n', '') for line in key_file if line]
+    else:
+        l = path_or_list.split(',')
+        print(f'Given input was interpreted as a comma seperated list of {things}')
+    return l
